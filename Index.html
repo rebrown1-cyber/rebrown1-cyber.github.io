@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="TideCast"/>
+<meta name="theme-color" content="#080e1a"/>
+<title>TideCast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: #080e1a; -webkit-tap-highlight-color: transparent; }
+  body { background: #080e1a; color: #e2e8f0; font-family: 'Syne', sans-serif; min-height: 100vh; min-height: 100dvh; padding-bottom: env(safe-area-inset-bottom); }
+
+  .app { max-width: 480px; margin: 0 auto; padding: 16px 14px 100px; }
+
+  /* HEADER */
+  .hdr { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; padding-top: max(8px, env(safe-area-inset-top)); }
+  .hdr-title { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.1; }
+  .hdr-title span { color: #22d3ee; }
+  .hdr-sub { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #475569; margin-top: 2px; letter-spacing: 0.8px; }
+  .hdr-loc { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #64748b; margin-top: 4px; }
+  .hdr-date { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #475569; text-align: right; line-height: 1.6; }
+
+  /* CARDS */
+  .card { background: #0f1a2e; border: 1px solid #1e3352; border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+  .card-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1.5px; color: #475569; text-transform: uppercase; margin-bottom: 10px; }
+
+  /* CONDITIONS GRID */
+  .cond-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .cond-item { background: #0f1a2e; border: 1px solid #1e3352; border-radius: 10px; padding: 13px 12px; }
+  .cond-val { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 500; line-height: 1; }
+  .amber { color: #f59e0b; } .teal { color: #22d3ee; } .green { color: #4ade80; } .purple { color: #c084fc; }
+  .cond-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #475569; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
+  .cond-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #64748b; margin-top: 3px; }
+
+  /* TREND BADGE */
+  .trend-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; margin-top: 6px; }
+  .trend-rising  { background: #052e16; color: #4ade80; border: 1px solid #166534; }
+  .trend-falling { background: #450a0a; color: #f87171; border: 1px solid #991b1b; }
+  .trend-stable  { background: #0c1a2e; color: #94a3b8; border: 1px solid #1e3352; }
+
+  /* PRESSURE ADVICE */
+  .press-advice { font-size: 12px; color: #94a3b8; line-height: 1.55; margin-top: 10px; padding: 10px 12px; background: #0a1220; border-radius: 8px; border-left: 3px solid #f59e0b; }
+
+  /* PRESSURE SVG */
+  .pressure-svg { width: 100%; height: auto; display: block; margin-top: 6px; }
+
+  /* FORECAST STRIP */
+  .forecast-strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .forecast-strip::-webkit-scrollbar { display: none; }
+  .fc-day { flex: 0 0 58px; background: #0a1220; border: 1px solid #1e3352; border-radius: 10px; padding: 8px 4px; text-align: center; }
+  .fc-day.today-fc { border-color: #22d3ee; background: #071824; }
+  .fc-lbl { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #64748b; }
+  .fc-hi { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #f59e0b; font-weight: 500; margin: 3px 0 1px; }
+  .fc-lo { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #475569; }
+  .fc-icon { font-size: 15px; margin: 2px 0; }
+  .fc-precip { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #38bdf8; margin-top: 2px; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+  .tab-btn { flex: 1; padding: 11px; border-radius: 11px; border: 1px solid #1e3352; background: #0a1220; color: #64748b; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.18s; -webkit-appearance: none; }
+  .tab-btn.active-fresh { background: #052e16; border-color: #166534; color: #4ade80; }
+  .tab-btn.active-salt  { background: #0c1a3a; border-color: #1e40af; color: #60a5fa; }
+
+  /* AI CARD */
+  .ai-card { background: #0a1220; border: 1px solid #1e3352; border-radius: 14px; padding: 16px; }
+  .ai-badge { display: inline-flex; align-items: center; gap: 7px; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px; color: #22d3ee; text-transform: uppercase; margin-bottom: 14px; }
+  .ai-dot { width: 7px; height: 7px; border-radius: 50%; background: #22d3ee; animation: pulse 2s infinite; flex-shrink: 0; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.25} }
+
+  /* LOADING */
+  .loading-row { display: flex; gap: 10px; align-items: center; padding: 18px 0; }
+  .spinner { width: 18px; height: 18px; border: 2px solid #1e3352; border-top-color: #22d3ee; border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-txt { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #475569; }
+
+  /* MARKDOWN */
+  .md-body { font-size: 13px; line-height: 1.65; color: #cbd5e1; }
+  .md-h2 { font-size: 11px; font-weight: 700; color: #22d3ee; text-transform: uppercase; letter-spacing: 1.2px; margin: 14px 0 8px; font-family: 'JetBrains Mono', monospace; }
+  .md-h2:first-child { margin-top: 0; }
+  .md-li { list-style: none; padding-left: 16px; position: relative; margin-bottom: 7px; color: #94a3b8; font-size: 13px; line-height: 1.55; }
+  .md-li::before { content: '›'; position: absolute; left: 0; color: #f59e0b; font-weight: 700; font-size: 15px; line-height: 1.3; }
+  .md-li strong { color: #e2e8f0; font-weight: 600; }
+  .md-p { color: #94a3b8; margin-bottom: 5px; font-size: 13px; }
+
+  /* SKELETON */
+  .skel { background: linear-gradient(90deg,#1e3352 25%,#243d5e 50%,#1e3352 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+  @keyframes shimmer { 0%{background-position:200% 0}100%{background-position:-200% 0} }
+
+  /* ERROR */
+  .error-box { background: #450a0a; border: 1px solid #991b1b; border-radius: 10px; padding: 14px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #fca5a5; margin-bottom: 12px; }
+
+  /* FOOTER */
+  .footer { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #334155; text-align: center; margin-top: 24px; line-height: 1.8; }
+  .footer a { color: #475569; text-decoration: none; }
+
+  /* REFRESH BTN */
+  .refresh-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; border-radius: 11px; border: 1px solid #1e3352; background: #0a1220; color: #64748b; font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer; margin-bottom: 12px; -webkit-appearance: none; transition: all 0.2s; }
+  .refresh-btn:active { background: #0f1a2e; color: #94a3b8; }
+
+  /* PWA install banner */
+  .install-banner { background: #071824; border: 1px solid #22d3ee33; border-radius: 11px; padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: center; gap: 12px; }
+  .install-banner-text { flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #64748b; line-height: 1.6; }
+  .install-banner-text strong { color: #94a3b8; display: block; margin-bottom: 2px; }
+  .install-x { background: none; border: none; color: #475569; font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div style="display:flex;align-items:center;justify-content:center;height:60vh;gap:12px">
+    <div class="spinner" style="width:22px;height:22px"></div>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#475569">Loading TideCast…</span>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+// NOTE: The Anthropic API key is intentionally left empty here.
+// To use the AI advisor, you need to either:
+//   1. Add your own key below (fine for personal/local use only)
+//   2. Set up a simple proxy server (recommended for sharing)
+// Get a key at: https://console.anthropic.com
+const ANTHROPIC_API_KEY = "";
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+const fmt = (n, d = 1) => typeof n === "number" ? n.toFixed(d) : "–";
+const hPaToInHg = hpa => (hpa * 0.02953).toFixed(2);
+const monthName = () => new Date().toLocaleString("default", { month: "long" });
+const todayStr = () => new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+const timeStr = () => new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+
+const WMO = {0:"Clear",1:"Mainly Clear",2:"Partly Cloudy",3:"Overcast",45:"Fog",48:"Icing Fog",51:"Light Drizzle",53:"Drizzle",55:"Heavy Drizzle",61:"Light Rain",63:"Rain",65:"Heavy Rain",71:"Light Snow",73:"Snow",75:"Heavy Snow",80:"Rain Showers",81:"Heavy Showers",95:"Thunderstorm"};
+const FC_ICONS = {0:"☀️",1:"🌤",2:"⛅",3:"☁️",45:"🌫",51:"🌦",53:"🌧",61:"🌧",63:"🌧",65:"🌧",71:"🌨",80:"🌦",95:"⛈"};
+
+const pressureAdvice = (inHg, trend) => {
+  if (trend === "rising")  return "Pressure rising — fish are becoming active. Work mid-column to surface. Great time to be on the water.";
+  if (trend === "falling") return "Pressure dropping — fish feed aggressively before the front. Throw fast reaction baits right now.";
+  if (inHg >= 30.1) return "High stable pressure — fish are finicky. Slow down, go deep, and downsize your lures.";
+  if (inHg <= 29.6) return "Low pressure — bass hug structure tight. Work the bottom slowly with finesse rigs.";
+  return "Stable pressure — consistent fishing. Match the hatch and methodically work structure.";
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let state = {
+  locName: "Locating…", lat: null, lon: null,
+  weather: null, pressureData: [], trend: "stable",
+  aiAdvice: "", aiLoading: false, tab: "fresh",
+  error: null, loaded: false, bannerDismissed: false
+};
+
+// ── WEATHER ───────────────────────────────────────────────────────────────────
+async function fetchWeather(lat, lon) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode,surface_pressure,windspeed_10m,winddirection_10m,relativehumidity_2m&hourly=surface_pressure&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,surface_pressure_mean&past_days=10&forecast_days=10&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto`;
+  const r = await fetch(url);
+  return r.json();
+}
+
+// ── AI ADVISOR ────────────────────────────────────────────────────────────────
+async function fetchAI(params) {
+  if (!ANTHROPIC_API_KEY) {
+    return `## Freshwater\n- **Add your Anthropic API key** to tidecast.html to unlock AI fishing advice.\n- Open the file in a text editor and paste your key into the ANTHROPIC_API_KEY variable at the top of the script.\n- Get a free key at console.anthropic.com\n\n## Saltwater\n- Weather data and pressure charts above are fully working.\n- AI advice requires your API key (see Freshwater section above).`;
+  }
+  const { month, pressureInHg, trend, tempF, wind } = params;
+  const prompt = `You are an expert Northeast US fishing guide. Today is ${todayStr()}, month: ${month}.
+Current conditions: ${tempF}°F air, ${pressureInHg} inHg pressure (${trend}), wind ${wind} mph.
+
+Give concise actionable advice for BOTH fishing types.
+
+## Freshwater
+- Top 3 target species right now in Northeast ponds/lakes with brief reason
+- Where fish are likely located (depth, structure, near shore vs deep)
+- Best lures/bait and retrieve style for these exact conditions
+- Spawn/bedding/seasonal behavior happening this month
+
+## Saltwater
+- Species currently running or active in Northeast coastal/inshore waters this month
+- Where to find them (beach, inlet, flats, depth)
+- Best rigs and lures for current conditions
+- Tide phase advice for these species
+
+Keep to 5-7 bullets per section. Be specific to Northeast US. Use markdown bullet lists only.`;
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
+    body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, messages: [{ role: "user", content: prompt }] })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.content?.[0]?.text ?? "Unable to load advice.";
+}
+
+// ── PRESSURE CHART ────────────────────────────────────────────────────────────
+function buildPressureChart(data) {
+  if (!data || !data.length) return '<div class="skel" style="height:100px"></div>';
+  const vals = data.map(d => parseFloat(hPaToInHg(d.hpa)));
+  const min = Math.min(...vals) - 0.1, max = Math.max(...vals) + 0.1;
+  const W = 600, H = 120, PT = 8, PR = 8, PB = 28, PL = 40;
+  const iW = W - PL - PR, iH = H - PT - PB;
+  const xS = i => PL + (i / (vals.length - 1)) * iW;
+  const yS = v => PT + iH - ((v - min) / (max - min)) * iH;
+  const pts = vals.map((v, i) => `${xS(i)},${yS(v)}`).join(" ");
+  const area = `${xS(0)},${H - PB} ${pts} ${xS(vals.length - 1)},${H - PB}`;
+  const pastCount = data.filter(d => d.past).length;
+  const todayX = xS(pastCount - 1);
+  const tickEvery = Math.max(1, Math.floor(vals.length / 5));
+  const ticks = data.map((d, i) => ({ d, i })).filter(({ i }) => i % tickEvery === 0 || i === data.length - 1);
+  const yTicks = [min + (max - min) * 0.25, min + (max - min) * 0.75];
+
+  return `<svg viewBox="0 0 ${W} ${H}" class="pressure-svg">
+    <defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </linearGradient></defs>
+    <polygon points="${area}" fill="url(#pg)"/>
+    <polyline points="${pts}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="${todayX}" y1="${PT}" x2="${todayX}" y2="${H - PB}" stroke="#22d3ee" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="${todayX + 4}" y="${PT + 10}" fill="#22d3ee" font-size="9" font-family="'JetBrains Mono',monospace">TODAY</text>
+    ${ticks.map(({ d, i }) => `<text x="${xS(i)}" y="${H - 6}" fill="#64748b" font-size="8.5" text-anchor="middle" font-family="'JetBrains Mono',monospace">${d.label}</text>`).join("")}
+    ${yTicks.map(v => `<text x="${PL - 4}" y="${yS(v) + 3}" fill="#64748b" font-size="8.5" text-anchor="end" font-family="'JetBrains Mono',monospace">${v.toFixed(2)}</text>`).join("")}
+  </svg>`;
+}
+
+// ── MARKDOWN RENDERER ─────────────────────────────────────────────────────────
+function renderMd(text) {
+  if (!text) return "";
+  return text.split("\n").map(line => {
+    if (line.startsWith("## ")) return `<div class="md-h2">${esc(line.slice(3))}</div>`;
+    if (line.startsWith("### ")) return `<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8;margin:8px 0 4px">${esc(line.slice(4))}</div>`;
+    if (line.startsWith("- ") || line.startsWith("* ")) {
+      const c = line.slice(2).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+      return `<div class="md-li">${c}</div>`;
+    }
+    if (!line.trim()) return "<br>";
+    const c = line.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    return `<p class="md-p">${c}</p>`;
+  }).join("");
+}
+
+function esc(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() {
+  const { locName, weather, pressureData, trend, aiAdvice, aiLoading, tab, error, loaded, bannerDismissed } = state;
+  const cur = weather?.current;
+  const daily = weather?.daily;
+  const inHg = cur ? parseFloat(hPaToInHg(cur.surface_pressure)) : null;
+
+  const freshSection = aiAdvice.includes("## Saltwater")
+    ? aiAdvice.split("## Saltwater")[0].replace(/^## Freshwater\n?/, "").trim()
+    : aiAdvice.replace(/^## Freshwater\n?/, "").trim();
+  const saltSection = aiAdvice.includes("## Saltwater")
+    ? aiAdvice.split("## Saltwater")[1].trim()
+    : "";
+
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+
+  document.getElementById("app").innerHTML = `
+    ${isIOS && !isStandalone && !bannerDismissed ? `
+    <div class="install-banner">
+      <div style="font-size:22px">📲</div>
+      <div class="install-banner-text">
+        <strong>Add to Home Screen</strong>
+        Tap Share → "Add to Home Screen" for an app-like experience
+      </div>
+      <button class="install-x" onclick="dismissBanner()">×</button>
+    </div>` : ""}
+
+    <div class="hdr">
+      <div>
+        <div class="hdr-title">TIDE<span>CAST</span></div>
+        <div class="hdr-sub">FISHING INTELLIGENCE</div>
+        <div class="hdr-loc">${esc(locName)}</div>
+      </div>
+      <div class="hdr-date">${todayStr()}<br>${timeStr()}</div>
+    </div>
+
+    ${error ? `<div class="error-box">${esc(error)}</div>` : ""}
+
+    <div class="cond-grid">
+      <div class="cond-item">
+        ${cur ? `<div class="cond-val amber">${fmt(cur.temperature_2m, 0)}°</div>
+          <div class="cond-lbl">Air Temp (F)</div>
+          <div class="cond-sub">${WMO[cur.weathercode] ?? "–"}</div>`
+        : `<div class="skel" style="height:60px"></div>`}
+      </div>
+      <div class="cond-item">
+        ${inHg ? `<div class="cond-val teal">${inHg}</div>
+          <div class="cond-lbl">Pressure (inHg)</div>
+          <div class="trend-badge trend-${trend}">${trend === "rising" ? "↑" : trend === "falling" ? "↓" : "→"} ${trend}</div>`
+        : `<div class="skel" style="height:60px"></div>`}
+      </div>
+      <div class="cond-item">
+        ${cur ? `<div class="cond-val green">${fmt(cur.windspeed_10m, 0)}</div>
+          <div class="cond-lbl">Wind (mph)</div>
+          <div class="cond-sub">${cur.winddirection_10m}° direction</div>`
+        : `<div class="skel" style="height:60px"></div>`}
+      </div>
+      <div class="cond-item">
+        ${cur ? `<div class="cond-val purple">${fmt(cur.relativehumidity_2m, 0)}%</div>
+          <div class="cond-lbl">Humidity</div>`
+        : `<div class="skel" style="height:60px"></div>`}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Barometric Pressure — 10d History + 10d Forecast</div>
+      ${pressureData.length ? buildPressureChart(pressureData) : `<div class="skel" style="height:100px"></div>`}
+      ${inHg ? `<div class="press-advice">${pressureAdvice(inHg, trend)}</div>` : ""}
+    </div>
+
+    <div class="card">
+      <div class="card-label">10-Day Forecast</div>
+      ${daily ? `<div class="forecast-strip">
+        ${daily.time.slice(10, 21).map((t, i) => {
+          const d = new Date(t);
+          const lbl = i === 0 ? "Today" : d.toLocaleDateString("en-US", { weekday: "short" });
+          const code = daily.weathercode[10 + i];
+          const icon = FC_ICONS[code] ?? "🌥";
+          const precip = daily.precipitation_sum[10 + i];
+          return `<div class="fc-day${i === 0 ? " today-fc" : ""}">
+            <div class="fc-lbl">${lbl}</div>
+            <div class="fc-icon">${icon}</div>
+            <div class="fc-hi">${Math.round(daily.temperature_2m_max[10 + i])}°</div>
+            <div class="fc-lo">${Math.round(daily.temperature_2m_min[10 + i])}°</div>
+            ${precip > 0.05 ? `<div class="fc-precip">${precip.toFixed(1)}"</div>` : ""}
+          </div>`;
+        }).join("")}
+      </div>` : `<div class="skel" style="height:80px"></div>`}
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn ${tab === "fresh" ? "active-fresh" : ""}" onclick="setTab('fresh')">🎣 Freshwater</button>
+      <button class="tab-btn ${tab === "salt"  ? "active-salt"  : ""}" onclick="setTab('salt')">🌊 Saltwater</button>
+    </div>
+
+    <div class="ai-card">
+      <div class="ai-badge"><div class="ai-dot"></div>AI Fishing Advisor — NE US — ${monthName()}</div>
+      ${aiLoading ? `<div class="loading-row"><div class="spinner"></div><span class="loading-txt">Analyzing conditions & fish behavior…</span></div>` : ""}
+      ${!aiLoading && aiAdvice ? `<div class="md-body">${renderMd(tab === "fresh" ? "## Freshwater\n" + freshSection : "## Saltwater\n" + saltSection)}</div>` : ""}
+      ${!aiLoading && !aiAdvice && loaded ? `<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#475569">Add your Anthropic API key to enable AI advice.</div>` : ""}
+    </div>
+
+    <button class="refresh-btn" onclick="refreshAll()">↻ Refresh Conditions</button>
+
+    <div class="footer">
+      Weather: Open-Meteo (free) &nbsp;·&nbsp; AI: Claude &nbsp;·&nbsp; Location: Device GPS<br>
+      <a href="https://console.anthropic.com" target="_blank">Get API key at console.anthropic.com</a>
+    </div>
+  `;
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+function setTab(t) { state.tab = t; render(); }
+function dismissBanner() { state.bannerDismissed = true; render(); }
+
+async function refreshAll() {
+  if (state.lat) {
+    state.weather = null; state.pressureData = []; state.aiAdvice = ""; state.loaded = false;
+    render();
+    await loadData(state.lat, state.lon);
+  }
+}
+
+async function loadData(lat, lon) {
+  try {
+    // reverse geocode
+    try {
+      const geo = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+      const gd = await geo.json();
+      const city = gd.address?.city || gd.address?.town || gd.address?.village || gd.address?.county || "Your Area";
+      const st = gd.address?.state_code?.toUpperCase() ?? "";
+      state.locName = city + (st ? ", " + st : "");
+    } catch { state.locName = "Northeast US"; }
+    render();
+
+    const w = await fetchWeather(lat, lon);
+    state.weather = w;
+
+    // pressure timeline
+    const today_i = 10;
+    state.pressureData = w.daily.time.map((t, i) => {
+      const d = new Date(t);
+      return { label: d.toLocaleDateString("en-US", { month: "numeric", day: "numeric" }), hpa: w.daily.surface_pressure_mean[i], past: i < today_i };
+    });
+
+    // trend detection
+    const nowH = new Date().getHours();
+    const start = today_i * 24;
+    const recent  = w.hourly.surface_pressure.slice(start + Math.max(0, nowH - 5), start + nowH + 1);
+    const earlier = w.hourly.surface_pressure.slice(start + Math.max(0, nowH - 11), start + Math.max(0, nowH - 5));
+    if (recent.length && earlier.length) {
+      const rA = recent.reduce((a, b) => a + b, 0) / recent.length;
+      const eA = earlier.reduce((a, b) => a + b, 0) / earlier.length;
+      state.trend = rA > eA + 0.5 ? "rising" : rA < eA - 0.5 ? "falling" : "stable";
+    }
+
+    state.loaded = true;
+    render();
+
+    // AI advice
+    state.aiLoading = true;
+    render();
+    const cur = w.current;
+    const inHg = parseFloat(hPaToInHg(cur.surface_pressure));
+    state.aiAdvice = await fetchAI({ month: monthName(), pressureInHg: inHg, trend: state.trend, tempF: fmt(cur.temperature_2m, 0), wind: fmt(cur.windspeed_10m, 0) });
+    state.aiLoading = false;
+    render();
+
+  } catch(e) {
+    state.error = "Failed to load data. Check your connection and try refreshing.";
+    state.loaded = true;
+    render();
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+render(); // show loading state
+
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      state.lat = pos.coords.latitude;
+      state.lon = pos.coords.longitude;
+      loadData(state.lat, state.lon);
+    },
+    () => {
+      // fallback to Boston
+      state.lat = 42.36; state.lon = -71.06;
+      state.locName = "Boston, MA (fallback)";
+      loadData(state.lat, state.lon);
+    },
+    { timeout: 8000, maximumAge: 300000 }
+  );
+} else {
+  state.lat = 42.36; state.lon = -71.06;
+  loadData(42.36, -71.06);
+}
+</script>
+</body>
+</html>
