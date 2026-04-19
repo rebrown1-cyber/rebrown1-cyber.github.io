@@ -31,7 +31,7 @@ export default function App() {
       ) : (
         <ul>
           {notes.map((note) => (
-            <li key={note.id}>{note.content ?? JSON.stringify(note)}</li>
+            <li key={note.id}>{note.title ?? note.content ?? JSON.stringify(note)}</li>
           ))}
         </ul>
       )}
