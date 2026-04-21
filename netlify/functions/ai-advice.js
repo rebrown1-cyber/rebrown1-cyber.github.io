@@ -4,7 +4,7 @@ exports.handler = async (event) => {
   }
 
   const referer = event.headers["referer"] || event.headers["origin"] || "";
-  if (!referer.includes("frabjous-pudding-57b8af.netlify.app")) {
+  if (!referer.includes("serene-praline-05655b.netlify.app")) {
     return { statusCode: 403, body: "Forbidden" };
   }
 
