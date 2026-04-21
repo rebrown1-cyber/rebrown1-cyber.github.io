@@ -3,6 +3,11 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
+  const referer = event.headers["referer"] || event.headers["origin"] || "";
+  if (!referer.includes("frabjous-pudding-57b8af.netlify.app")) {
+    return { statusCode: 403, body: "Forbidden" };
+  }
+
   const { month, pressureInHg, trend, tempF, wind, todayStr } = JSON.parse(event.body);
 
   const prompt = `You are an expert Northeast US fishing guide. Today is ${todayStr}, month: ${month}.
