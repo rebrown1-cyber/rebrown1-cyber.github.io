@@ -289,7 +289,7 @@ function render() {
       <div class="ai-badge"><div class="ai-dot"></div>AI Fishing Advisor — NE US — ${monthName()}</div>
       ${aiLoading ? `<div class="loading-row"><div class="spinner"></div><span class="loading-txt">Analyzing conditions & fish behavior…</span></div>` : ""}
       ${!aiLoading && aiAdvice ? `<div class="md-body">${renderMd(tab === "fresh" ? "## Freshwater\n" + freshSection : "## Saltwater\n" + saltSection)}</div>` : ""}
-      ${!aiLoading && !aiAdvice && loaded ? `<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#475569">AI advisor unavailable — check Netlify function configuration.</div>` : ""}
+      ${!aiLoading && !aiAdvice && loaded ? `<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#475569">AI advisor unavailable — make sure ANTHROPIC_API_KEY is set in Netlify environment variables.</div>` : ""}
     </div>
 
     <button class="refresh-btn" onclick="refreshAll()">↻ Refresh Conditions</button>
@@ -344,16 +344,21 @@ async function loadData(lat, lon) {
     state.loaded = true;
     render();
 
+    // AI runs separately so weather always shows even if AI fails
     state.aiLoading = true;
     render();
-    const cur = w.current;
-    const inHg = parseFloat(hPaToInHg(cur.surface_pressure));
-    state.aiAdvice = await fetchAI({ month: monthName(), pressureInHg: inHg, trend: state.trend, tempF: fmt(cur.temperature_2m, 0), wind: fmt(cur.windspeed_10m, 0) });
+    try {
+      const cur = w.current;
+      const inHg = parseFloat(hPaToInHg(cur.surface_pressure));
+      state.aiAdvice = await fetchAI({ month: monthName(), pressureInHg: inHg, trend: state.trend, tempF: fmt(cur.temperature_2m, 0), wind: fmt(cur.windspeed_10m, 0) });
+    } catch(aiErr) {
+      state.aiAdvice = "";
+    }
     state.aiLoading = false;
     render();
 
   } catch(e) {
-    state.error = "Failed to load data: " + e.message;
+    state.error = "Failed to load weather data: " + e.message;
     state.loaded = true;
     state.aiLoading = false;
     render();
