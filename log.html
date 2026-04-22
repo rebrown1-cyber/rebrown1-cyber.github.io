@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="theme-color" content="#080e1a"/>
+<title>TideCast — Fishing Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: #080e1a; }
+  body { background: #080e1a; color: #e2e8f0; font-family: 'Syne', sans-serif; min-height: 100vh; padding-bottom: 40px; }
+
+  .app { max-width: 480px; margin: 0 auto; padding: 16px 14px; }
+
+  .hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding-top: 12px; }
+  .hdr-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .hdr-title span { color: #22d3ee; }
+  .hdr-back { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #475569; text-decoration: none; }
+  .hdr-back:hover { color: #94a3b8; }
+
+  .card { background: #0f1a2e; border: 1px solid #1e3352; border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+  .card-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1.5px; color: #475569; text-transform: uppercase; margin-bottom: 14px; }
+
+  .field { margin-bottom: 12px; }
+  .field label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; display: block; margin-bottom: 5px; }
+  .field input, .field textarea, .field select {
+    width: 100%; background: #0a1220; border: 1px solid #1e3352; border-radius: 8px;
+    color: #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    padding: 10px 12px; outline: none; -webkit-appearance: none;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: #22d3ee; }
+  .field textarea { resize: vertical; min-height: 70px; }
+  .field select option { background: #0f1a2e; }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .btn { width: 100%; padding: 13px; border-radius: 11px; border: none; background: #22d3ee; color: #080e1a; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 4px; }
+  .btn:active { opacity: 0.85; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .success-msg { background: #052e16; border: 1px solid #166534; border-radius: 8px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4ade80; margin-top: 10px; display: none; }
+
+  /* History table */
+  .history-item { border-bottom: 1px solid #1e3352; padding: 12px 0; }
+  .history-item:last-child { border-bottom: none; }
+  .history-date { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #22d3ee; margin-bottom: 4px; }
+  .history-main { font-size: 14px; font-weight: 600; color: #e2e8f0; margin-bottom: 2px; }
+  .history-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #64748b; line-height: 1.6; }
+  .history-notes { font-size: 12px; color: #94a3b8; margin-top: 5px; font-style: italic; }
+  .empty-msg { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #475569; text-align: center; padding: 20px 0; }
+
+  .spinner { width: 16px; height: 16px; border: 2px solid #1e3352; border-top-color: #22d3ee; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px auto; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* PIN screen */
+  .pin-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 16px; }
+  .pin-title { font-size: 20px; font-weight: 800; }
+  .pin-title span { color: #22d3ee; }
+  .pin-input { background: #0f1a2e; border: 1px solid #1e3352; border-radius: 10px; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 24px; letter-spacing: 8px; text-align: center; padding: 14px 20px; width: 180px; outline: none; -webkit-appearance: none; }
+  .pin-input:focus { border-color: #22d3ee; }
+  .pin-error { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #f87171; display: none; }
+  .pin-btn { padding: 12px 32px; border-radius: 11px; border: none; background: #22d3ee; color: #080e1a; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div class="pin-screen" id="pinScreen">
+  <div class="pin-title">TIDE<span>CAST</span></div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#475569">Enter PIN to access your log</div>
+  <input class="pin-input" type="password" inputmode="numeric" maxlength="4" id="pinInput" placeholder="····"/>
+  <div class="pin-error" id="pinError">Incorrect PIN</div>
+  <button class="pin-btn" onclick="checkPin()">Unlock</button>
+</div>
+
+<!-- LOG APP -->
+<div class="app" id="logApp" style="display:none">
+  <div class="hdr">
+    <div>
+      <div class="hdr-title">TIDE<span>CAST</span></div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#475569;margin-top:2px;letter-spacing:0.8px">FISHING LOG</div>
+    </div>
+    <a class="hdr-back" href="/index.html">← Back to app</a>
+  </div>
+
+  <!-- ENTRY FORM -->
+  <div class="card">
+    <div class="card-label">New Entry</div>
+
+    <div class="row">
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="f-date"/>
+      </div>
+      <div class="field">
+        <label>Location</label>
+        <input type="text" id="f-location" placeholder="e.g. Lake Winnipesaukee"/>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>Species</label>
+        <input type="text" id="f-species" placeholder="e.g. Largemouth Bass"/>
+      </div>
+      <div class="field">
+        <label>Bait / Lure</label>
+        <input type="text" id="f-bait" placeholder="e.g. Senko worm"/>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>Water Temp (°F)</label>
+        <input type="number" id="f-water-temp" placeholder="e.g. 58"/>
+      </div>
+      <div class="field">
+        <label>Conditions</label>
+        <select id="f-conditions">
+          <option value="">— select —</option>
+          <option>Sunny</option>
+          <option>Partly Cloudy</option>
+          <option>Overcast</option>
+          <option>Rainy</option>
+          <option>Windy</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="f-notes" placeholder="What worked, what didn't, any observations…"></textarea>
+    </div>
+
+    <button class="btn" id="submitBtn" onclick="submitEntry()">Save Entry</button>
+    <div class="success-msg" id="successMsg">✓ Entry saved!</div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="card">
+    <div class="card-label">History</div>
+    <div id="historyList"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://hwgsfeeyhyznccpbxzrh.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3Z3NmZWV5aHl6bmNjcGJ4enJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTYzNTAsImV4cCI6MjA5MjA3MjM1MH0.bVPhmF4GZgqVYHMLafNQbUR70EJlor6fSNweVqfd2vI";
+const PIN = "1234";
+
+const headers = {
+  "apikey": SUPABASE_KEY,
+  "Authorization": "Bearer " + SUPABASE_KEY,
+  "Content-Type": "application/json"
+};
+
+function checkPin() {
+  const val = document.getElementById("pinInput").value;
+  if (val === PIN) {
+    document.getElementById("pinScreen").style.display = "none";
+    document.getElementById("logApp").style.display = "block";
+    setDefaultDate();
+    loadHistory();
+  } else {
+    document.getElementById("pinError").style.display = "block";
+    document.getElementById("pinInput").value = "";
+  }
+}
+
+document.getElementById("pinInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") checkPin();
+});
+
+function setDefaultDate() {
+  const today = new Date().toISOString().split("T")[0];
+  document.getElementById("f-date").value = today;
+}
+
+async function submitEntry() {
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  btn.textContent = "Saving…";
+
+  const entry = {
+    date: document.getElementById("f-date").value,
+    location: document.getElementById("f-location").value,
+    species: document.getElementById("f-species").value,
+    bait: document.getElementById("f-bait").value,
+    water_temp: document.getElementById("f-water-temp").value || null,
+    conditions: document.getElementById("f-conditions").value,
+    notes: document.getElementById("f-notes").value
+  };
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/catches`, {
+    method: "POST",
+    headers: { ...headers, "Prefer": "return=minimal" },
+    body: JSON.stringify(entry)
+  });
+
+  btn.disabled = false;
+  btn.textContent = "Save Entry";
+
+  if (res.ok) {
+    const msg = document.getElementById("successMsg");
+    msg.style.display = "block";
+    setTimeout(() => msg.style.display = "none", 3000);
+    clearForm();
+    loadHistory();
+  } else {
+    alert("Failed to save. Check your Supabase table setup.");
+  }
+}
+
+function clearForm() {
+  ["f-location","f-species","f-bait","f-water-temp","f-notes"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("f-conditions").value = "";
+  setDefaultDate();
+}
+
+async function loadHistory() {
+  const list = document.getElementById("historyList");
+  list.innerHTML = '<div class="spinner"></div>';
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/catches?select=*&order=date.desc,id.desc`, { headers });
+  const data = await res.json();
+
+  if (!data.length) {
+    list.innerHTML = '<div class="empty-msg">No entries yet. Add your first catch above.</div>';
+    return;
+  }
+
+  list.innerHTML = data.map(row => {
+    const d = new Date(row.date + "T12:00:00");
+    const dateStr = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+    return `
+      <div class="history-item">
+        <div class="history-date">${dateStr}</div>
+        <div class="history-main">${row.species || "Unknown species"}</div>
+        <div class="history-sub">
+          ${row.location ? "📍 " + row.location + "&nbsp;&nbsp;" : ""}
+          ${row.bait ? "🎣 " + row.bait + "&nbsp;&nbsp;" : ""}
+          ${row.water_temp ? "🌡 " + row.water_temp + "°F&nbsp;&nbsp;" : ""}
+          ${row.conditions ? "🌤 " + row.conditions : ""}
+        </div>
+        ${row.notes ? `<div class="history-notes">${row.notes}</div>` : ""}
+      </div>`;
+  }).join("");
+}
+</script>
+</body>
+</html>
